@@ -23,6 +23,11 @@ describe('demuxDockerStream', () => {
 		expect(demuxDockerStream(buf)).toBe('OE');
 	});
 
+	test('interleaved keeps stdout and stderr in the order they were written', () => {
+		const buf = Buffer.concat([frame(1, 'a\n'), frame(2, 'b\n'), frame(1, 'c\n')]);
+		expect(demuxDockerStream(buf, { interleaved: true })).toBe('a\nb\nc\n');
+	});
+
 	test('unknown stream type defaults to stdout', () => {
 		const buf = frame(9, 'weird');
 		const res = demuxDockerStream(buf, { separateStreams: true }) as { stdout: string; stderr: string };

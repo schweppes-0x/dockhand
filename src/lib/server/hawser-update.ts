@@ -236,7 +236,7 @@ export async function getHawserUpdateProgress(envId: number, updaterId: string):
 	if (outcome === 'running') return progress;
 
 	const logs = await dockerFetch(`/containers/${encodeURIComponent(updaterId)}/logs?stdout=true&stderr=true&tail=500`, {}, envId);
-	if (logs.ok) progress.logs = demuxDockerStream(Buffer.from(await logs.arrayBuffer())) as string;
+	if (logs.ok) progress.logs = demuxDockerStream(Buffer.from(await logs.arrayBuffer()), { interleaved: true }) as string;
 	progress.version = await agentVersion(env);
 	await dockerFetch(`/containers/${encodeURIComponent(updaterId)}?force=true`, { method: 'DELETE' }, envId).catch(() => {});
 	return progress;

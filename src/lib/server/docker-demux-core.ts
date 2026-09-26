@@ -3,15 +3,17 @@
  *
  * Each frame is an 8-byte header (stream type in byte 0: 1=stdout, 2=stderr;
  * 32-bit big-endian payload size in bytes 4-7) followed by the payload. With
- * `separateStreams` the stdout and stderr payloads are returned apart; otherwise
- * they are concatenated (stdout first). No imports / no I/O so it is unit-testable.
+ * `separateStreams` the stdout and stderr payloads are returned apart; with
+ * `interleaved` they are joined in the order they were written; otherwise they are
+ * concatenated (stdout first). No imports / no I/O so it is unit-testable.
  */
 export function demuxDockerStream(
 	buffer: Buffer,
-	options?: { separateStreams?: boolean }
+	options?: { separateStreams?: boolean; interleaved?: boolean }
 ): string | { stdout: string; stderr: string } {
 	const stdout: string[] = [];
 	const stderr: string[] = [];
+	const inOrder: string[] = [];
 	let offset = 0;
 
 	while (offset < buffer.length) {
@@ -27,6 +29,7 @@ export function demuxDockerStream(
 		}
 
 		const payload = buffer.subarray(offset + 8, offset + 8 + frameSize).toString('utf-8');
+		inOrder.push(payload);
 
 		if (streamType === 1) {
 			stdout.push(payload);
@@ -42,5 +45,6 @@ export function demuxDockerStream(
 	if (options?.separateStreams) {
 		return { stdout: stdout.join(''), stderr: stderr.join('') };
 	}
+	if (options?.interleaved) return inOrder.join('');
 	return [...stdout, ...stderr].join('');
 }

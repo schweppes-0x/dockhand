@@ -67,7 +67,7 @@ if [ "$ROLLBACK" = "1" ]; then
             error "Rollback failed: manual intervention required. The previous container is ${OLD_CONTAINER_ID:0:12} ($PREVIOUS_NAME)"
             exit 3
         fi
-        if ! docker start "$OLD_CONTAINER_ID"; then
+        if ! docker start "$OLD_CONTAINER_ID" >/dev/null; then
             error "Rollback failed: manual intervention required. Could not start the previous container ${OLD_CONTAINER_ID:0:12} ($PREVIOUS_NAME)"
             exit 3
         fi
@@ -110,7 +110,7 @@ if [ "$ROLLBACK" = "1" ]; then
     log "  Old: ${OLD_CONTAINER_ID:0:12}, New: ${NEW_CONTAINER_ID:0:12}, Name: $CONTAINER_NAME"
 
     log "Stopping container (timeout: ${STOP_TIMEOUT}s)..."
-    docker stop -t "$STOP_TIMEOUT" "$OLD_CONTAINER_ID" || { error "Failed to stop container"; exit 1; }
+    docker stop -t "$STOP_TIMEOUT" "$OLD_CONTAINER_ID" >/dev/null || { error "Failed to stop container"; exit 1; }
     log "Container stopped"
 
     # From here on the old container is down, so any unexpected exit must restore it
@@ -128,7 +128,7 @@ if [ "$ROLLBACK" = "1" ]; then
     connect_networks "$NEW_CONTAINER_ID"
 
     log "Starting container..."
-    docker start "$NEW_CONTAINER_ID" || { error "Failed to start container"; rollback; }
+    docker start "$NEW_CONTAINER_ID" >/dev/null || { error "Failed to start container"; rollback; }
     log "Container started"
 
     log "Verifying container (timeout: ${VERIFY_TIMEOUT}s)..."
@@ -137,7 +137,7 @@ if [ "$ROLLBACK" = "1" ]; then
 
     trap - EXIT
     log "Removing previous container..."
-    if docker rm "$OLD_CONTAINER_ID"; then
+    if docker rm "$OLD_CONTAINER_ID" >/dev/null; then
         log "Previous container removed"
     else
         log "  Warning: failed to remove previous container $PREVIOUS_NAME"
