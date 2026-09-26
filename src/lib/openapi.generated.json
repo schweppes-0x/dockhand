@@ -11439,6 +11439,266 @@
         }
       }
     },
+    "/api/environments/{id}/hawser-update": {
+      "post": {
+        "operationId": "post_api_environments_id_hawser-update",
+        "tags": [
+          "environments"
+        ],
+        "summary": "Update the environment's Hawser agent container — pull the new image through the agent, then hand off to an updater sidecar on the agent's host that swaps the containers and rolls back if the new agent does not come back",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Environment id (from GET /api/environments)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "text/event-stream SSE response (steps: pulling_image, building_config, pulling_updater, creating_container, launching_updater, then a \"launched\" {updaterId} or \"error\" event) — or, with \"Accept: application/json\", the final event as plain JSON"
+          },
+          "403": {
+            "description": "Permission denied"
+          },
+          "404": {
+            "description": "Environment not found"
+          },
+          "409": {
+            "description": "An update of this agent is already being prepared"
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/environments/{id}/hawser-update/check": {
+      "get": {
+        "operationId": "get_api_environments_id_hawser-update_check",
+        "tags": [
+          "environments"
+        ],
+        "summary": "Check whether the Hawser agent container of an environment can be updated from Dockhand, and to which version",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Environment id (from GET /api/environments)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "supported:false with a reason covers binary installs, disconnected agents and read-only sockets; inFlight is set while an update is running on the host",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "supported": {
+                      "type": "boolean"
+                    },
+                    "updateAvailable": {
+                      "type": "boolean"
+                    },
+                    "reason": {
+                      "type": "string"
+                    },
+                    "candidates": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "currentVersion": {
+                      "type": "string"
+                    },
+                    "currentImage": {
+                      "type": "string"
+                    },
+                    "containerName": {
+                      "type": "string"
+                    },
+                    "targetImage": {
+                      "type": "string"
+                    },
+                    "targetVersion": {
+                      "type": "string"
+                    },
+                    "newerIncompatibleVersion": {
+                      "type": "string"
+                    },
+                    "isComposeManaged": {
+                      "type": "boolean"
+                    },
+                    "inFlight": {
+                      "type": "object",
+                      "properties": {
+                        "updaterId": {
+                          "type": "string"
+                        },
+                        "fromVersion": {
+                          "type": "string"
+                        },
+                        "targetImage": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "supported",
+                    "updateAvailable"
+                  ]
+                },
+                "example": {
+                  "supported": true,
+                  "updateAvailable": true,
+                  "reason": "string",
+                  "candidates": [
+                    "string"
+                  ],
+                  "currentVersion": "string",
+                  "currentImage": "string",
+                  "containerName": "string",
+                  "targetImage": "string",
+                  "targetVersion": "string",
+                  "newerIncompatibleVersion": "string",
+                  "isComposeManaged": true,
+                  "inFlight": {
+                    "updaterId": "string",
+                    "fromVersion": "string",
+                    "targetImage": "string"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Permission denied"
+          },
+          "500": {
+            "description": "Check failed"
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/environments/{id}/hawser-update/progress": {
+      "get": {
+        "operationId": "get_api_environments_id_hawser-update_progress",
+        "tags": [
+          "environments"
+        ],
+        "summary": "Poll a launched Hawser update — whether the agent is back, and once it is, the updater's outcome, logs and the agent's version",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Environment id (from GET /api/environments)"
+          },
+          {
+            "name": "updaterId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Updater container id (from the \"launched\" event of POST /api/environments/{id}/hawser-update)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "outcome is running, updated, failed, rolled_back, rollback_failed or unknown (updater already removed); it is absent while the agent is offline",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "agentConnected": {
+                      "type": "boolean"
+                    },
+                    "outcome": {
+                      "type": "string"
+                    },
+                    "exitCode": {
+                      "type": "integer"
+                    },
+                    "logs": {
+                      "type": "string"
+                    },
+                    "version": {
+                      "type": "string"
+                    },
+                    "fromVersion": {
+                      "type": "string"
+                    },
+                    "targetImage": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "agentConnected"
+                  ]
+                },
+                "example": {
+                  "agentConnected": true,
+                  "outcome": "string",
+                  "exitCode": 0,
+                  "logs": "string",
+                  "version": "string",
+                  "fromVersion": "string",
+                  "targetImage": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "updaterId is required"
+          },
+          "403": {
+            "description": "Permission denied"
+          },
+          "404": {
+            "description": "Environment not found"
+          },
+          "500": {
+            "description": "Failed to read progress"
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
     "/api/environments/{id}/icon": {
       "get": {
         "operationId": "get_api_environments_id_icon",

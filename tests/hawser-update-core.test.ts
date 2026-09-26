@@ -117,7 +117,8 @@ describe('pickCompatibleRelease', () => {
 });
 
 describe('findSocketMount', () => {
-	const inspect = (env: string[], mounts: unknown[]) => ({ Config: { Env: env }, Mounts: mounts });
+	type Mount = { Type?: string; Source?: string; Destination?: string; RW?: boolean };
+	const inspect = (env: string[], mounts: Mount[]) => ({ Config: { Env: env }, Mounts: mounts });
 	const sock = { Type: 'bind', Source: '/var/run/docker.sock', Destination: '/var/run/docker.sock', RW: true };
 
 	it('returns the host path of the Docker socket bind mount', () => {
