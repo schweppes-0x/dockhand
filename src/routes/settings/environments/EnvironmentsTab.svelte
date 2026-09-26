@@ -601,7 +601,10 @@
 							<!-- Hawser Version Column -->
 							<Table.Cell>
 								<span class="inline-flex items-center gap-1.5">
-									{#if testResult?.hawser?.hawserVersion}
+									{#if $hawserUpdateChecks[env.id]?.currentVersion}
+										<!-- freshest: re-checked right after an update from the dialog -->
+										<span class="text-sm text-muted-foreground">{$hawserUpdateChecks[env.id].currentVersion}</span>
+									{:else if testResult?.hawser?.hawserVersion}
 										<span class="text-sm text-muted-foreground">{testResult.hawser.hawserVersion}</span>
 									{:else if env.hawserVersion}
 										<span class="text-sm text-muted-foreground">{env.hawserVersion}</span>
