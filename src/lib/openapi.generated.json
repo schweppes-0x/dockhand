@@ -11501,7 +11501,7 @@
         ],
         "responses": {
           "200": {
-            "description": "supported:false with a reason covers binary installs, disconnected agents and read-only sockets; inFlight is set while an update is running on the host",
+            "description": "supported:false with a reason covers binary installs, disconnected agents and read-only sockets; inFlight is set while an update is running on the host (running:true) or its result has not been collected yet (running:false)",
             "content": {
               "application/json": {
                 "schema": {
@@ -11549,6 +11549,9 @@
                         "updaterId": {
                           "type": "string"
                         },
+                        "running": {
+                          "type": "boolean"
+                        },
                         "fromVersion": {
                           "type": "string"
                         },
@@ -11579,6 +11582,7 @@
                   "isComposeManaged": true,
                   "inFlight": {
                     "updaterId": "string",
+                    "running": true,
                     "fromVersion": "string",
                     "targetImage": "string"
                   }

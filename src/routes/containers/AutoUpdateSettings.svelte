@@ -4,7 +4,7 @@
 	import CronEditor from '$lib/components/cron-editor.svelte';
 	import VulnerabilityCriteriaSelector, { type VulnerabilityCriteria } from '$lib/components/VulnerabilityCriteriaSelector.svelte';
 	import { currentEnvironment } from '$lib/stores/environment';
-	import { Ship, Cable, ExternalLink, AlertTriangle, Info } from 'lucide-svelte';
+	import { Ship, Cable, AlertTriangle, Info } from 'lucide-svelte';
 	import type { SystemContainerType } from '$lib/types';
 
 	interface Props {
@@ -64,19 +64,12 @@
 						update it from <a href="/settings?tab=about" class="text-primary hover:underline">Settings &gt; About</a>.
 					</p>
 				{:else}
-					<p class="font-medium text-blue-600 dark:text-blue-400">Auto-updates not available</p>
+					<p class="font-medium text-blue-600 dark:text-blue-400">Scheduled auto-updates not available</p>
 					<p class="text-muted-foreground">
-						Hawser agents must be updated on their remote host.
+						Hawser agents do not auto-update on a schedule. When a new version is out,
+						update the agent from
+						<a href="/settings?tab=environments{$currentEnvironment ? `&edit=${$currentEnvironment.id}` : ''}" class="text-primary hover:underline">Settings &gt; Environments</a>.
 					</p>
-					<a
-						href="https://github.com/Finsys/hawser"
-						target="_blank"
-						rel="noopener noreferrer"
-						class="text-primary hover:underline flex items-center gap-1"
-					>
-						<ExternalLink class="w-3 h-3" />
-						View update instructions on GitHub
-					</a>
 				{/if}
 			</div>
 		</div>

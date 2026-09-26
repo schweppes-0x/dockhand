@@ -1881,8 +1881,8 @@
 								onclick={(e) => { e.stopPropagation(); inspectContainer(container); }}
 							>{container.name}</button>
 							<!-- System containers (Dockhand, Hawser) carry no label badge; only an
-							     amber update indicator when a new version is out (they can't be
-							     self-updated from the UI, so the tooltip points to the update path). -->
+							     amber update indicator when a new version is out (they aren't updated
+							     from the container list, so the tooltip points to the update path). -->
 							{#if container.systemContainer && containersWithUpdatesSet.has(container.id)}
 								<Tooltip.Root>
 									<Tooltip.Trigger>
@@ -1905,16 +1905,12 @@
 													Settings &gt; About
 												</a>
 											{:else}
-												<p class="text-muted-foreground text-xs whitespace-nowrap">Update on the remote host where Hawser runs.</p>
 												<a
-													href="https://github.com/Finsys/hawser"
-													target="_blank"
-													rel="noopener noreferrer"
+													href="/settings?tab=environments&edit={envId}"
 													class="text-primary hover:underline text-xs flex items-center gap-1 whitespace-nowrap"
 													onclick={(e) => e.stopPropagation()}
 												>
-													<ExternalLink class="w-3 h-3" />
-													Update instructions on GitHub
+													Update Hawser in the environment settings
 												</a>
 											{/if}
 										</div>

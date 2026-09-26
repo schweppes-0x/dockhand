@@ -37,6 +37,7 @@
 	import EnvironmentModal from './EnvironmentModal.svelte';
 	import { environments as environmentsStore } from '$lib/stores/environment';
 	import { dashboardData } from '$lib/stores/dashboard';
+	import { hawserUpdateChecks } from '$lib/stores/hawser-updates';
 	import { fetchEnvironmentDeleteCounts } from '$lib/utils/environment-delete';
 
 	interface Props {
@@ -599,13 +600,25 @@
 
 							<!-- Hawser Version Column -->
 							<Table.Cell>
-								{#if testResult?.hawser?.hawserVersion}
-									<span class="text-sm text-muted-foreground">{testResult.hawser.hawserVersion}</span>
-								{:else if env.hawserVersion}
-									<span class="text-sm text-muted-foreground">{env.hawserVersion}</span>
-								{:else}
-									<span class="text-muted-foreground text-sm">—</span>
-								{/if}
+								<span class="inline-flex items-center gap-1.5">
+									{#if testResult?.hawser?.hawserVersion}
+										<span class="text-sm text-muted-foreground">{testResult.hawser.hawserVersion}</span>
+									{:else if env.hawserVersion}
+										<span class="text-sm text-muted-foreground">{env.hawserVersion}</span>
+									{:else}
+										<span class="text-muted-foreground text-sm">—</span>
+									{/if}
+									{#if $hawserUpdateChecks[env.id]?.updateAvailable}
+										<button
+											type="button"
+											class="inline-flex"
+											title="Hawser update available{$hawserUpdateChecks[env.id]?.targetVersion ? `: ${$hawserUpdateChecks[env.id].targetVersion}` : ''}"
+											onclick={() => openEditEnvModal(env)}
+										>
+											<CircleArrowUp class="w-3.5 h-3.5 text-amber-500" />
+										</button>
+									{/if}
+								</span>
 							</Table.Cell>
 
 							<!-- Actions Column -->

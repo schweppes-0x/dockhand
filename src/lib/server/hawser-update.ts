@@ -37,7 +37,7 @@ export interface HawserUpdateCheck {
 	updateAvailable: boolean;
 	newerIncompatibleVersion?: string;
 	isComposeManaged?: boolean;
-	inFlight?: { updaterId: string; fromVersion?: string; targetImage?: string };
+	inFlight?: { updaterId: string; running: boolean; fromVersion?: string; targetImage?: string };
 }
 
 export interface HawserUpdateProgress {
@@ -106,20 +106,27 @@ export async function checkHawserUpdate(envId: number): Promise<HawserUpdateChec
 
 	const currentVersion = (await agentVersion(env)) || env.hawserVersion || undefined;
 
-	const running = (await listUpdaters(remoteDeps(envId))).find((c) => c.State === 'running');
-	if (running) {
-		return {
-			supported: true,
-			updateAvailable: false,
-			currentVersion,
-			inFlight: {
-				updaterId: running.Id,
-				fromVersion: running.Labels?.[`${UPDATER_LABEL}.from`],
-				targetImage: running.Labels?.[`${UPDATER_LABEL}.target`]
-			}
-		};
-	}
+	// A running updater is an update in progress; an exited one still holds the
+	// result of an update nobody collected yet (the dialog was closed).
+	const updaters = await listUpdaters(remoteDeps(envId));
+	const pending = updaters.find((c) => c.State === 'running') ?? updaters[0];
+	const inFlight = pending && {
+		updaterId: pending.Id,
+		running: pending.State === 'running',
+		fromVersion: pending.Labels?.[`${UPDATER_LABEL}.from`],
+		targetImage: pending.Labels?.[`${UPDATER_LABEL}.target`]
+	};
+	if (inFlight?.running) return { supported: true, updateAvailable: false, currentVersion, inFlight };
 
+	const result = await resolveUpdateTarget(env, currentVersion);
+	return inFlight ? { ...result, inFlight } : result;
+}
+
+async function resolveUpdateTarget(
+	env: { id: number; connectionType?: string | null; port?: number | null },
+	currentVersion: string | undefined
+): Promise<HawserUpdateCheck> {
+	const envId = env.id;
 	const containers = await remoteJson<ContainerSummary[]>(remoteDeps(envId), '/containers/json');
 	const selected = selectHawserContainer(containers, {
 		edgeHostname: env.connectionType === 'hawser-edge' ? getEdgeConnectionInfo(envId)?.hostname : undefined,
@@ -182,7 +189,7 @@ export async function runHawserUpdate(
 	preparing.add(envId);
 	try {
 		const check = await checkHawserUpdate(envId);
-		if (check.inFlight) throw new HawserUpdateConflictError('An update of this agent is already running.');
+		if (check.inFlight?.running) throw new HawserUpdateConflictError('An update of this agent is already running.');
 		if (!check.supported) throw new Error(check.reason || 'Updating this agent is not supported.');
 		if (!check.updateAvailable || !check.targetImage || !check.containerName) throw new Error('Hawser is already up to date.');
 

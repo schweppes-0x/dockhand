@@ -7,8 +7,8 @@ import { checkHawserUpdate } from '$lib/server/hawser-update';
  * @openapi
  * summary: Check whether the Hawser agent container of an environment can be updated from Dockhand, and to which version
  * path: id:integer! Environment id (from GET /api/environments)
- * resp-200: {supported:boolean!, updateAvailable:boolean!, reason:string, candidates:array<string>, currentVersion:string, currentImage:string, containerName:string, targetImage:string, targetVersion:string, newerIncompatibleVersion:string, isComposeManaged:boolean, inFlight:{updaterId:string, fromVersion:string, targetImage:string}}
- * resp-200-desc: supported:false with a reason covers binary installs, disconnected agents and read-only sockets; inFlight is set while an update is running on the host
+ * resp-200: {supported:boolean!, updateAvailable:boolean!, reason:string, candidates:array<string>, currentVersion:string, currentImage:string, containerName:string, targetImage:string, targetVersion:string, newerIncompatibleVersion:string, isComposeManaged:boolean, inFlight:{updaterId:string, running:boolean, fromVersion:string, targetImage:string}}
+ * resp-200-desc: supported:false with a reason covers binary installs, disconnected agents and read-only sockets; inFlight is set while an update is running on the host (running:true) or its result has not been collected yet (running:false)
  * resp-403: Permission denied
  * resp-500: Check failed
  */

@@ -9,6 +9,7 @@
 	import { Label } from '$lib/components/ui/label';
 	import { Input } from '$lib/components/ui/input';
 	import * as Select from '$lib/components/ui/select';
+	import HawserUpdateButton from '$lib/components/HawserUpdateButton.svelte';
 	import VulnerabilityCriteriaSelector, { type VulnerabilityCriteria } from '$lib/components/VulnerabilityCriteriaSelector.svelte';
 	import {
 		Plus,
@@ -1915,6 +1916,11 @@
 									<a href="https://github.com/Finsys/hawser" target="_blank" class="text-blue-500 hover:underline">Hawser</a> agent connects out to Dockhand. No port forwarding needed.
 								{/if}
 							</p>
+							{#if isEditing && environment && environment.connectionType === formConnectionType && isHawserConn(formConnectionType)}
+								<div class="pt-1">
+									<HawserUpdateButton environmentId={environment.id} environmentName={environment.name} onupdated={onSaved} />
+								</div>
+							{/if}
 						</div>
 
 						<!-- Socket connection settings -->
