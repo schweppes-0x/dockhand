@@ -11459,7 +11459,7 @@
         ],
         "responses": {
           "200": {
-            "description": "text/event-stream SSE response (steps: pulling_image, building_config, pulling_updater, creating_container, launching_updater, then a \"launched\" {updaterId} or \"error\" event) — or, with \"Accept: application/json\", the final event as plain JSON"
+            "description": "text/event-stream SSE response (steps: pulling_image, building_config, pulling_updater, creating_container, launching_updater, then a \"launched\" {updaterId} or \"error\" event, and a final \"result\" {success, updaterId|error}) — or, with \"Accept: application/json\", that result as plain JSON"
           },
           "403": {
             "description": "Permission denied"

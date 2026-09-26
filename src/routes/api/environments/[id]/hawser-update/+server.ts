@@ -10,7 +10,7 @@ import { runHawserUpdate, isHawserUpdatePreparing } from '$lib/server/hawser-upd
  * @openapi
  * summary: Update the environment's Hawser agent container — pull the new image through the agent, then hand off to an updater sidecar on the agent's host that swaps the containers and rolls back if the new agent does not come back
  * path: id:integer! Environment id (from GET /api/environments)
- * resp-200: text/event-stream SSE response (steps: pulling_image, building_config, pulling_updater, creating_container, launching_updater, then a "launched" {updaterId} or "error" event) — or, with "Accept: application/json", the final event as plain JSON
+ * resp-200: text/event-stream SSE response (steps: pulling_image, building_config, pulling_updater, creating_container, launching_updater, then a "launched" {updaterId} or "error" event, and a final "result" {success, updaterId|error}) — or, with "Accept: application/json", that result as plain JSON
  * resp-403: Permission denied
  * resp-404: Environment not found
  * resp-409: An update of this agent is already being prepared
@@ -50,9 +50,12 @@ export const POST: RequestHandler = async (event) => {
 					hawserUpdate: { status: 'launched', fromVersion: check.currentVersion, targetImage: check.targetImage }
 				});
 				send('launched', { updaterId });
+				send('result', { success: true, updaterId });
 			} catch (err) {
 				console.error(`[HawserUpdate] Env ${id}:`, err);
-				send('error', { step: 'preparation', message: err instanceof Error ? err.message : String(err) });
+				const message = err instanceof Error ? err.message : String(err);
+				send('error', { step: 'preparation', message });
+				send('result', { success: false, error: message });
 			} finally {
 				if (!closed) {
 					try { controller.close(); } catch { /* already closed */ }
