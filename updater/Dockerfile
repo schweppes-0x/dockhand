@@ -46,4 +46,7 @@ COPY --from=os-builder /work/rootfs/ /
 COPY update.sh /update.sh
 RUN chmod +x /update.sh
 
+# update.sh supports ROLLBACK=1; Dockhand checks this label before a remote Hawser update
+LABEL dockhand.updater.rollback="1"
+
 ENTRYPOINT ["/update.sh"]
