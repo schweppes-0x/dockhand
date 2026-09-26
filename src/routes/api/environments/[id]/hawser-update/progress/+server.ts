@@ -3,7 +3,7 @@ import type { RequestHandler } from './$types';
 import { authorize } from '$lib/server/authorize';
 import { getEnvironment } from '$lib/server/db';
 import { auditEnvironment } from '$lib/server/audit';
-import { getHawserUpdateProgress } from '$lib/server/hawser-update';
+import { getHawserUpdateProgress, HawserUpdateNotUpdaterError } from '$lib/server/hawser-update';
 
 /**
  * @openapi
@@ -12,7 +12,7 @@ import { getHawserUpdateProgress } from '$lib/server/hawser-update';
  * query: updaterId:string! Updater container id (from the "launched" event of POST /api/environments/{id}/hawser-update)
  * resp-200: {agentConnected:boolean!, outcome:string, exitCode:integer, logs:string, version:string, fromVersion:string, targetImage:string}
  * resp-200-desc: outcome is running, updated, failed, rolled_back, rollback_failed or unknown (updater already removed); it is absent while the agent is offline
- * resp-400: updaterId is required
+ * resp-400: updaterId is required, or it is not a Hawser updater container
  * resp-403: Permission denied
  * resp-404: Environment not found
  * resp-500: Failed to read progress
@@ -47,6 +47,7 @@ export const GET: RequestHandler = async (event) => {
 		}
 		return json(progress);
 	} catch (err) {
+		if (err instanceof HawserUpdateNotUpdaterError) return json({ error: err.message }, { status: 400 });
 		return json({ error: 'Failed to read progress: ' + (err instanceof Error ? err.message : String(err)) }, { status: 500 });
 	}
 };

@@ -20,7 +20,7 @@ import {
 	type ContainerSummary,
 	type HawserUpdateOutcome
 } from './hawser-update-core';
-import { launchHawserUpdate, listUpdaters, remoteJson, UPDATER_LABEL, type LaunchDeps } from './hawser-update-launch';
+import { launchHawserUpdate, listUpdaters, remoteJson, isHawserUpdater, UPDATER_LABEL, type LaunchDeps } from './hawser-update-launch';
 
 const RELEASES_URL = 'https://api.github.com/repos/Finsys/hawser/releases?per_page=50';
 const RELEASES_TTL_MS = 10 * 60 * 1000;
@@ -172,6 +172,7 @@ async function resolveUpdateTarget(
 }
 
 export class HawserUpdateConflictError extends Error {}
+export class HawserUpdateNotUpdaterError extends Error {}
 
 export function isHawserUpdatePreparing(envId: number): boolean {
 	return preparing.has(envId);
@@ -224,8 +225,9 @@ export async function getHawserUpdateProgress(envId: number, updaterId: string):
 	if (!res.ok) throw new Error(`Failed to inspect the updater (${res.status})`);
 
 	const info = (await res.json()) as { State?: { Status?: string; ExitCode?: number }; Config?: { Labels?: Record<string, string> } };
-	const outcome = updaterOutcome(info.State?.Status || '', info.State?.ExitCode ?? 0);
 	const labels = info.Config?.Labels || {};
+	if (!isHawserUpdater(labels)) throw new HawserUpdateNotUpdaterError('Not a Hawser updater container');
+	const outcome = updaterOutcome(info.State?.Status || '', info.State?.ExitCode ?? 0);
 	const progress: HawserUpdateProgress = {
 		agentConnected: true,
 		outcome,

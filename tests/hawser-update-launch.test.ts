@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'bun:test';
-import { launchHawserUpdate, type LaunchDeps } from '../src/lib/server/hawser-update-launch';
+import { launchHawserUpdate, isHawserUpdater, type LaunchDeps } from '../src/lib/server/hawser-update-launch';
 
 // In-memory remote daemon: answers the Docker API calls the launch makes and
 // records every request so the tests can check what was (not) done on the host.
@@ -114,5 +114,14 @@ describe('launchHawserUpdate', () => {
 			path === '/version' ? new Response(JSON.stringify({ Arch: 'arm', ApiVersion: '1.43' })) : request(path, init);
 		await launchHawserUpdate(deps, { ...target, edge: false }, noop);
 		expect(calls.some((c) => c.method === 'PULL' && c.path === 'fnsys/dockhand-updater:latest-baseline')).toBe(true);
+	});
+});
+
+describe('isHawserUpdater', () => {
+	it('accepts only containers carrying the Hawser updater label', () => {
+		expect(isHawserUpdater({ 'dockhand.hawser-updater': 'true' })).toBe(true);
+		expect(isHawserUpdater({ 'dockhand.updater': 'true' })).toBe(false);
+		expect(isHawserUpdater({})).toBe(false);
+		expect(isHawserUpdater(undefined)).toBe(false);
 	});
 });

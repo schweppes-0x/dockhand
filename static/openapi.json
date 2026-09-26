@@ -11681,7 +11681,7 @@
             }
           },
           "400": {
-            "description": "updaterId is required"
+            "description": "updaterId is required, or it is not a Hawser updater container"
           },
           "403": {
             "description": "Permission denied"

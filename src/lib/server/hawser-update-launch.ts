@@ -15,6 +15,11 @@ import {
 export const UPDATER_LABEL = 'dockhand.hawser-updater';
 const ROLLBACK_LABEL = 'dockhand.updater.rollback';
 
+/** Only containers Dockhand started as a Hawser updater may be read or removed by id from the client. */
+export function isHawserUpdater(labels: Record<string, string> | undefined): boolean {
+	return labels?.[UPDATER_LABEL] === 'true';
+}
+
 export interface LaunchDeps {
 	request(path: string, init?: RequestInit): Promise<Response>;
 	pullImage(image: string, onProgress?: (data: any) => void): Promise<void>;
